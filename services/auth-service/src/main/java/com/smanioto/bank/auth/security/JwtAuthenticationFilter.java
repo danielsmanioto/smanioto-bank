@@ -53,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception ex) {
-            LOGGER.debug("Falha ao validar token JWT", ex);
+            LOGGER.debug("Falha ao validar token JWT: {}", ex.getClass().getSimpleName());
             SecurityContextHolder.clearContext();
         }
 

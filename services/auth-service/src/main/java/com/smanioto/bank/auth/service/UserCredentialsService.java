@@ -22,10 +22,10 @@ public class UserCredentialsService implements UserDetailsService {
 
     public void register(String username, String rawPassword) {
         var normalized = username.trim().toLowerCase();
-        if (users.containsKey(normalized)) {
+        var created = users.putIfAbsent(normalized, new UserCredential(normalized, passwordEncoder.encode(rawPassword)));
+        if (created != null) {
             throw new IllegalArgumentException("Usuário já existe");
         }
-        users.put(normalized, new UserCredential(normalized, passwordEncoder.encode(rawPassword)));
     }
 
     @Override
