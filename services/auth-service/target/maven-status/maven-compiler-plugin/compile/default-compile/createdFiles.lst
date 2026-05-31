@@ -7,5 +7,6 @@ com/smanioto/bank/auth/service/UserCredentialsService.class
 com/smanioto/bank/auth/security/JwtService.class
 com/smanioto/bank/auth/dto/LoginRequest.class
 com/smanioto/bank/auth/controller/AuthController.class
+com/smanioto/bank/auth/config/PasswordConfig.class
 com/smanioto/bank/auth/config/SecurityConfig.class
 com/smanioto/bank/auth/dto/TokenResponse.class
