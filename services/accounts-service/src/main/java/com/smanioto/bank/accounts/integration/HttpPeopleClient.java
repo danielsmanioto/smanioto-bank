@@ -2,7 +2,7 @@ package com.smanioto.bank.accounts.integration;
 
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
@@ -27,7 +27,7 @@ public class HttpPeopleClient implements PeopleClient {
                 .body(CustomerExistsPayload.class);
             return response != null && response.exists();
         } catch (RestClientResponseException ex) {
-            if (HttpStatusCode.valueOf(404).equals(ex.getStatusCode())) {
+            if (HttpStatus.NOT_FOUND.equals(ex.getStatusCode())) {
                 return false;
             }
             throw ex;

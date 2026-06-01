@@ -149,18 +149,54 @@ class AccountControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(missingDestinationBody))
             .andExpect(status().isBadRequest());
+
+        var sameAccountBody = """
+            {
+              "fromAccountId": "%s",
+              "toAccountId": "%s",
+              "amount": 1.00
+            }
+            """.formatted(sourceAccountId, sourceAccountId);
+        mockMvc.perform(post("/accounts/transfer")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(sameAccountBody))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldRejectTransferBetweenDifferentBanks() throws Exception {
+        given(peopleClient.customerExists(any())).willReturn(true);
+        String sourceAccountId = openAccount("55555-5", 100.00, "341");
+        String destinationAccountId = openAccount("66666-6", 20.00, "237");
+
+        var transferBody = """
+            {
+              "fromAccountId": "%s",
+              "toAccountId": "%s",
+              "amount": 10.00
+            }
+            """.formatted(sourceAccountId, destinationAccountId);
+
+        mockMvc.perform(post("/accounts/transfer")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(transferBody))
+            .andExpect(status().isBadRequest());
     }
 
     private String openAccount(String accountNumber, double balance) throws Exception {
+        return openAccount(accountNumber, balance, "341");
+    }
+
+    private String openAccount(String accountNumber, double balance, String bank) throws Exception {
         var body = """
             {
               "customerId": "%s",
-              "bank": "341",
+              "bank": "%s",
               "branch": "0001",
               "number": "%s",
               "initialBalance": %.2f
             }
-            """.formatted(UUID.randomUUID(), accountNumber, balance);
+            """.formatted(UUID.randomUUID(), bank, accountNumber, balance);
 
         var result = mockMvc.perform(post("/accounts")
                 .contentType(MediaType.APPLICATION_JSON)

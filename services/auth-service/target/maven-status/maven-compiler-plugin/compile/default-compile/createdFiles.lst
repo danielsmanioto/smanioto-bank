@@ -1,12 +1,12 @@
 com/smanioto/bank/auth/AuthServiceApplication.class
-com/smanioto/bank/auth/model/UserCredential.class
-com/smanioto/bank/auth/security/JwtAuthenticationFilter.class
 com/smanioto/bank/auth/dto/RegisterRequest.class
 com/smanioto/bank/auth/dto/ValidationResponse.class
-com/smanioto/bank/auth/service/UserCredentialsService.class
 com/smanioto/bank/auth/security/JwtService.class
-com/smanioto/bank/auth/dto/LoginRequest.class
 com/smanioto/bank/auth/controller/AuthController.class
 com/smanioto/bank/auth/config/PasswordConfig.class
+com/smanioto/bank/auth/model/UserCredential.class
+com/smanioto/bank/auth/security/JwtAuthenticationFilter.class
+com/smanioto/bank/auth/service/UserCredentialsService.class
+com/smanioto/bank/auth/dto/LoginRequest.class
 com/smanioto/bank/auth/config/SecurityConfig.class
 com/smanioto/bank/auth/dto/TokenResponse.class
