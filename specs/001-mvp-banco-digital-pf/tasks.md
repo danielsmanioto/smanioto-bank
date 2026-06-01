@@ -21,10 +21,10 @@
 
 ## Phase 4: Cadastro de cliente e conta (US2)
 
-- [ ] T009 [US2] Criar estrutura base do `people-service` em `/tmp/workspace/danielsmanioto/smanioto-bank/services/people-service`
+- [ ] T009 [US2] Criar estrutura base do `people-service` em `services/people-service`
 - [ ] T010 [US2] Implementar entidade e persistência de cliente PF no `people-service`
 - [ ] T011 [US2] Implementar endpoint de cadastro de cliente PF com validações obrigatórias
-- [ ] T012 [US2] Criar estrutura base do `accounts-service` em `/tmp/workspace/danielsmanioto/smanioto-bank/services/accounts-service`
+- [ ] T012 [US2] Criar estrutura base do `accounts-service` em `services/accounts-service`
 - [ ] T013 [US2] Implementar entidade e persistência de conta (banco, agência, número, saldo)
 - [ ] T014 [US2] Implementar regra de abertura de conta apenas para cliente PF já cadastrado
 - [ ] T015 [US2] Implementar endpoint de abertura de conta vinculada ao cliente
