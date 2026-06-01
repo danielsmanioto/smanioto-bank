@@ -19,9 +19,22 @@
 - [x] T007 [US1] Criar testes de cadastro/login/rota protegida em `src/test/java/com/smanioto/bank/auth/controller/AuthControllerTest.java`
 - [ ] T008 [US1] Persistir credenciais em banco de dados (próximo passo)
 
-## Próximas fases (backlog)
+## Phase 4: Cadastro de cliente e conta (US2)
 
-- [ ] T009 [US2] Iniciar `people-service` para cadastro de cliente PF
-- [ ] T010 [US2] Iniciar `accounts-service` para abertura de conta
-- [ ] T011 [US3] Implementar extrato
-- [ ] T012 [US3] Implementar transferência interna com atomicidade
+- [ ] T009 [US2] Criar estrutura base do `people-service` em `services/people-service`
+- [ ] T010 [US2] Implementar entidade e persistência de cliente PF no `people-service`
+- [ ] T011 [US2] Implementar endpoint de cadastro de cliente PF com validações obrigatórias
+- [ ] T012 [US2] Criar estrutura base do `accounts-service` em `services/accounts-service`
+- [ ] T013 [US2] Implementar entidade e persistência de conta (banco, agência, número, saldo)
+- [ ] T014 [US2] Implementar regra de abertura de conta apenas para cliente PF já cadastrado
+- [ ] T015 [US2] Implementar endpoint de abertura de conta vinculada ao cliente
+- [ ] T016 [US2] Criar testes de cadastro de cliente e abertura de conta
+
+## Phase 5: Extrato e transferência interna (US3)
+
+- [ ] T017 [US3] Implementar entidade de movimentação e persistência de lançamentos
+- [ ] T018 [US3] Implementar endpoint de consulta de extrato em ordem cronológica
+- [ ] T019 [US3] Implementar endpoint de transferência interna entre contas
+- [ ] T020 [US3] Garantir processamento atômico de débito/crédito da transferência
+- [ ] T021 [US3] Implementar validações de transferência (saldo insuficiente, valor inválido, conta destino inexistente)
+- [ ] T022 [US3] Criar testes de extrato e transferência (sucesso e rejeições)
