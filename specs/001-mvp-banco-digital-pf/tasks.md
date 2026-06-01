@@ -17,24 +17,24 @@
 ## Phase 3: Testes de Auth
 
 - [x] T007 [US1] Criar testes de cadastro/login/rota protegida em `src/test/java/com/smanioto/bank/auth/controller/AuthControllerTest.java`
-- [ ] T008 [US1] Persistir credenciais em banco de dados (próximo passo)
+- [x] T008 [US1] Persistir credenciais em banco de dados (próximo passo)
 
 ## Phase 4: Cadastro de cliente e conta (US2)
 
-- [ ] T009 [US2] Criar estrutura base do `people-service` em `services/people-service`
-- [ ] T010 [US2] Implementar entidade e persistência de cliente PF no `people-service`
-- [ ] T011 [US2] Implementar endpoint de cadastro de cliente PF com validações obrigatórias
-- [ ] T012 [US2] Criar estrutura base do `accounts-service` em `services/accounts-service`
-- [ ] T013 [US2] Implementar entidade e persistência de conta (banco, agência, número, saldo)
-- [ ] T014 [US2] Implementar regra de abertura de conta apenas para cliente PF já cadastrado
-- [ ] T015 [US2] Implementar endpoint de abertura de conta vinculada ao cliente
-- [ ] T016 [US2] Criar testes de cadastro de cliente e abertura de conta
+- [x] T009 [US2] Criar estrutura base do `people-service` em `services/people-service`
+- [x] T010 [US2] Implementar entidade e persistência de cliente PF no `people-service`
+- [x] T011 [US2] Implementar endpoint de cadastro de cliente PF com validações obrigatórias
+- [x] T012 [US2] Criar estrutura base do `accounts-service` em `services/accounts-service`
+- [x] T013 [US2] Implementar entidade e persistência de conta (banco, agência, número, saldo)
+- [x] T014 [US2] Implementar regra de abertura de conta apenas para cliente PF já cadastrado
+- [x] T015 [US2] Implementar endpoint de abertura de conta vinculada ao cliente
+- [x] T016 [US2] Criar testes de cadastro de cliente e abertura de conta
 
 ## Phase 5: Extrato e transferência interna (US3)
 
-- [ ] T017 [US3] Implementar entidade de movimentação e persistência de lançamentos
-- [ ] T018 [US3] Implementar endpoint de consulta de extrato em ordem cronológica
-- [ ] T019 [US3] Implementar endpoint de transferência interna entre contas
-- [ ] T020 [US3] Garantir processamento atômico de débito/crédito da transferência
-- [ ] T021 [US3] Implementar validações de transferência (saldo insuficiente, valor inválido, conta destino inexistente)
-- [ ] T022 [US3] Criar testes de extrato e transferência (sucesso e rejeições)
+- [x] T017 [US3] Implementar entidade de movimentação e persistência de lançamentos
+- [x] T018 [US3] Implementar endpoint de consulta de extrato em ordem cronológica
+- [x] T019 [US3] Implementar endpoint de transferência interna entre contas
+- [x] T020 [US3] Garantir processamento atômico de débito/crédito da transferência
+- [x] T021 [US3] Implementar validações de transferência (saldo insuficiente, valor inválido, conta destino inexistente)
+- [x] T022 [US3] Criar testes de extrato e transferência (sucesso e rejeições)
