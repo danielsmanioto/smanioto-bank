@@ -1,0 +1,12 @@
+/tmp/workspace/danielsmanioto/smanioto-bank/services/auth-service/src/main/java/com/smanioto/bank/auth/AuthServiceApplication.java
+/tmp/workspace/danielsmanioto/smanioto-bank/services/auth-service/src/main/java/com/smanioto/bank/auth/config/PasswordConfig.java
+/tmp/workspace/danielsmanioto/smanioto-bank/services/auth-service/src/main/java/com/smanioto/bank/auth/config/SecurityConfig.java
+/tmp/workspace/danielsmanioto/smanioto-bank/services/auth-service/src/main/java/com/smanioto/bank/auth/controller/AuthController.java
+/tmp/workspace/danielsmanioto/smanioto-bank/services/auth-service/src/main/java/com/smanioto/bank/auth/dto/LoginRequest.java
+/tmp/workspace/danielsmanioto/smanioto-bank/services/auth-service/src/main/java/com/smanioto/bank/auth/dto/RegisterRequest.java
+/tmp/workspace/danielsmanioto/smanioto-bank/services/auth-service/src/main/java/com/smanioto/bank/auth/dto/TokenResponse.java
+/tmp/workspace/danielsmanioto/smanioto-bank/services/auth-service/src/main/java/com/smanioto/bank/auth/dto/ValidationResponse.java
+/tmp/workspace/danielsmanioto/smanioto-bank/services/auth-service/src/main/java/com/smanioto/bank/auth/model/UserCredential.java
+/tmp/workspace/danielsmanioto/smanioto-bank/services/auth-service/src/main/java/com/smanioto/bank/auth/security/JwtAuthenticationFilter.java
+/tmp/workspace/danielsmanioto/smanioto-bank/services/auth-service/src/main/java/com/smanioto/bank/auth/security/JwtService.java
+/tmp/workspace/danielsmanioto/smanioto-bank/services/auth-service/src/main/java/com/smanioto/bank/auth/service/UserCredentialsService.java
