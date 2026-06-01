@@ -19,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AccountService {
 
+    private static final int MONETARY_SCALE = 2;
+    private static final RoundingMode MONETARY_ROUNDING = RoundingMode.HALF_EVEN;
+
     private final AccountRepository accountRepository;
     private final MovementRepository movementRepository;
     private final PeopleClient peopleClient;
@@ -43,7 +46,7 @@ public class AccountService {
                 request.bank().trim(),
                 request.branch().trim(),
                 request.number().trim(),
-                request.initialBalance().setScale(2, RoundingMode.HALF_EVEN)
+                request.initialBalance().setScale(MONETARY_SCALE, MONETARY_ROUNDING)
             ));
         } catch (DataIntegrityViolationException ex) {
             throw new IllegalArgumentException("Conta já cadastrada com o número informado");

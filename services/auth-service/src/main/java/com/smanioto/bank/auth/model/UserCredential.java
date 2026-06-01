@@ -13,7 +13,7 @@ public class UserCredential {
     @Column(nullable = false, length = 50)
     private String username;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, length = 500)
     private String passwordHash;
 
     protected UserCredential() {

@@ -31,7 +31,7 @@ class CustomerControllerTest {
         var body = """
             {
               "fullName": "Maria da Silva",
-              "cpf": "12345678901",
+              "cpf": "39053344705",
               "email": "maria@teste.com"
             }
             """;
