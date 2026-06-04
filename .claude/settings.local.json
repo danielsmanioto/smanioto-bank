@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs -I{} sh -c 'echo \"=== {} ===\" && grep -E \"<artifactId>|<version>|<java.version>|<spring-boot\" {} | head -8')",
+      "Bash(mkdir -p /Users/danielsmanioto/Documents/projects/projets_senior/smanioto-bank/specs/003-docs-e-scripts)",
+      "Bash(chmod +x /Users/danielsmanioto/Documents/projects/projets_senior/smanioto-bank/start.sh /Users/danielsmanioto/Documents/projects/projets_senior/smanioto-bank/stop.sh)"
+    ],
+    "additionalDirectories": [
+      "/Users/danielsmanioto/Documents/projects/projets_senior/smanioto-bank/specs"
+    ]
+  }
+}

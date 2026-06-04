@@ -11,3 +11,7 @@ build/
 Thumbs.db
 *.tmp
 *.swp
+
+# Scripts de execução local
+.logs/
+.pids
