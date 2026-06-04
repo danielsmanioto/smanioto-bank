@@ -20,6 +20,7 @@ Laboratório de aprendizado em **Spec-Driven Development (SDD)** com arquitetura
 ## 📋 Sumário
 
 - [Visão Geral](#-visão-geral)
+- [Interface](#-interface)
 - [Arquitetura](#-arquitetura)
 - [Pré-requisitos](#-pré-requisitos)
 - [Início Rápido](#-início-rápido)
@@ -47,6 +48,18 @@ O **smanioto-bank** simula as operações essenciais de um banco digital para Pe
 | 📊 Extrato | Histórico completo de movimentações |
 | 🔄 Transferência | Transferência atômica entre contas internas |
 | 🌐 Interface Web | Frontend HTML/CSS/JS para operar tudo pelo navegador |
+
+---
+
+## 📸 Interface
+
+| Login | Conta e Saldo |
+|:---:|:---:|
+| ![Tela de login](docs/images/login.png) | ![Tela de conta](docs/images/account.png) |
+
+| Extrato | Transferência |
+|:---:|:---:|
+| ![Tela de extrato](docs/images/statement.png) | ![Tela de transferência](docs/images/transfer.png) |
 
 ---
 

@@ -1,1 +1,3 @@
 /Users/danielsmanioto/Documents/projects/projets_senior/smanioto-bank/services/auth-service/src/test/java/com/smanioto/bank/auth/controller/AuthControllerTest.java
+/Users/danielsmanioto/Documents/projects/projets_senior/smanioto-bank/services/auth-service/src/test/java/com/smanioto/bank/auth/security/JwtServiceTest.java
+/Users/danielsmanioto/Documents/projects/projets_senior/smanioto-bank/services/auth-service/src/test/java/com/smanioto/bank/auth/service/UserCredentialsServiceTest.java
