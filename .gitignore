@@ -16,5 +16,8 @@ Thumbs.db
 .logs/
 .pids
 
+# Configurações locais do Claude Code
+.claude/settings.local.json
+
 # Gerado pelo seed.sh — muda a cada execução
 docs/seed-users.md

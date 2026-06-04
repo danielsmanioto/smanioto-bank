@@ -129,6 +129,9 @@ build_service "auth-service"     "$ROOT/services/auth-service"
 build_service "people-service"   "$ROOT/services/people-service"
 build_service "accounts-service" "$ROOT/services/accounts-service"
 
+# JWT secret para uso local — substitua por um valor gerado de forma segura em outros ambientes
+export JWT_SECRET="${JWT_SECRET:-smanioto-bank-local-dev-secret-key-change-in-production}"
+
 printf "\n"
 p "${BOLD}[2/3] Iniciando serviços...${RESET}"
 printf "\n"
