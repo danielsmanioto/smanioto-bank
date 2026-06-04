@@ -23,6 +23,7 @@ Laboratório de aprendizado em **Spec-Driven Development (SDD)** com arquitetura
 - [Arquitetura](#-arquitetura)
 - [Pré-requisitos](#-pré-requisitos)
 - [Início Rápido](#-início-rápido)
+- [Consultando Logs](#-consultando-logs)
 - [Referência da API](#-referência-da-api)
   - [Auth Service](#-auth-service--porta-8080)
   - [People Service](#-people-service--porta-8081)
@@ -161,6 +162,52 @@ O frontend exige que a conta seja criada via API antes do primeiro acesso. O [Ma
 7. Realizar transferências entre contas
 
 > **Atalho:** rode `./seed.sh` após o `./start.sh` para criar 10 usuários prontos (incluindo `admin/admin`) com saldo e extrato populados.
+
+---
+
+## 🔍 Consultando Logs
+
+Os logs de todos os serviços ficam em `.logs/` e podem ser consultados com o script `logs.sh`.
+
+### Comandos rápidos
+
+```bash
+# Últimas 50 linhas de todos os serviços
+./logs.sh
+
+# Seguir todos em tempo real (como tail -f nos 4 ao mesmo tempo)
+./logs.sh -f
+
+# Apenas erros e warnings de todos os serviços
+./logs.sh -e
+
+# Buscar texto/exceção em todos os logs
+./logs.sh -g 'NullPointerException'
+
+# Focar em um serviço específico
+./logs.sh -s auth
+./logs.sh -s people
+./logs.sh -s accounts
+./logs.sh -s frontend
+
+# Combinar: seguir apenas erros do accounts-service
+./logs.sh -s accounts -e -f
+
+# Aumentar o histórico exibido
+./logs.sh -n 200
+```
+
+### Opções disponíveis
+
+| Opção | Descrição |
+|---|---|
+| `-f` | Seguir logs em tempo real (`tail -f` em todos) |
+| `-n LINHAS` | Número de linhas por serviço (padrão: 50) |
+| `-g TEXTO` | Filtrar por texto (grep) |
+| `-s SERVIÇO` | Exibir apenas um serviço (`auth`, `people`, `accounts`, `frontend`) |
+| `-e` | Mostrar apenas linhas de `ERROR`, `WARN` e `Exception` |
+
+> **Dica de debug:** comece com `./logs.sh -e` para ver todos os erros de uma vez, depois use `./logs.sh -s <serviço> -f` para acompanhar o serviço problemático em tempo real.
 
 ---
 
@@ -398,6 +445,7 @@ smanioto-bank/
 │
 ├── 📄 start.sh                        # Sobe todos os serviços com um comando
 ├── 📄 stop.sh                         # Para todos os serviços
+├── 📄 logs.sh                         # Consulta logs agregados de todos os serviços
 ├── 📄 guia-dev.md                     # Guia de desenvolvimento SDD
 │
 ├── 📂 services/
