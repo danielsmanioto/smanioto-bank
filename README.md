@@ -82,7 +82,17 @@ graph TD
 
     Auth --> AuthDB[(H2<br/>authdb)]
     People --> PeopleDB[(H2<br/>peopledb)]
-    Accounts --> AccountsDB[(H2<br/>accountsdb)]
+    Accounts --> AccountsDB[(H2 TCP<br/>accountsdb<br/>:9092)]
+
+    subgraph Data Lake — Democratização
+        GlueJob["⚙️ glue_job.py<br/>(PySpark local<br/>simula AWS Glue)"]
+        Parquet[("📦 Parquet<br/>daily_statement/<br/>account_id / date")]
+        QueryCLI["🔍 query_daily.py<br/>(consulta ad-hoc)"]
+    end
+
+    AccountsDB -->|"JDBC :9092"| GlueJob
+    GlueJob -->|"overwrite"| Parquet
+    Parquet -->|"pyarrow read"| QueryCLI
 ```
 
 ### Serviços
@@ -93,8 +103,33 @@ graph TD
 | `people-service` | **8081** | Cadastro e consulta de clientes PF (CPF, nome, data de nascimento) |
 | `accounts-service` | **8082** | Abertura de conta, consulta de saldo, extrato e transferências internas |
 | `frontend` | **3000** | Interface web para operar todas as funcionalidades pelo navegador |
+| `data-lake` | — | Job PySpark que lê o SOR via JDBC e gera Parquet diário |
 
-> **Banco de dados:** cada serviço usa um banco H2 in-memory independente. Os dados são perdidos ao parar os serviços — comportamento esperado para esse laboratório.
+> **Banco de dados:** cada serviço usa um banco H2 in-memory independente. O accounts-service expõe também um servidor H2 TCP (porta 9092) para que o Glue job local consuma os dados via JDBC.
+
+### Camada de Democratização (Data Lake)
+
+| Componente | Arquivo | Descrição |
+|---|---|---|
+| **Glue Job** | `services/data-lake/glue_job.py` | Lê `ACCOUNTS` e `MOVEMENTS` via JDBC, calcula visão diária e salva Parquet |
+| **Query CLI** | `services/data-lake/query_daily.py` | Consulta os arquivos Parquet por conta e/ou data |
+| **Runner** | `services/data-lake/run_job.sh` | Script de execução com verificação de dependências |
+
+```
+output/daily_statement/
+  account_id=<uuid>/
+    date=2026-06-04/
+      part-00000-....parquet   ← opening_balance, closing_balance, créditos, débitos, lançamentos
+```
+
+**Para executar:**
+```bash
+cd services/data-lake
+./run_job.sh                                       # gera os Parquet
+python3 query_daily.py --list-accounts             # lista contas disponíveis
+python3 query_daily.py --account <uuid>            # extrato diário completo
+python3 query_daily.py --account <uuid> --date 2026-06-04
+```
 
 ---
 
@@ -481,24 +516,27 @@ smanioto-bank/
 │   │       ├── service/               # AccountService
 │   │       └── model/                 # Account, Movement
 │   │
-│   └── 📂 frontend/                   # HTML + CSS + JS — porta 3000
-│       ├── index.html                 # Redireciona para login.html
-│       ├── login.html                 # Tela de login
-│       ├── account.html               # Visão de conta e saldo
-│       ├── statement.html             # Extrato de movimentações
-│       ├── transfer.html              # Formulário de transferência
-│       ├── css/style.css              # Estilos globais
-│       ├── js/api.js                  # Módulo central de chamadas HTTP
-│       ├── js/auth.js                 # Guard de autenticação (JWT)
-│       ├── js/login.js
-│       ├── js/account.js
-│       ├── js/statement.js
-│       └── js/transfer.js
+│   ├── 📂 frontend/                   # HTML + CSS + JS — porta 3000
+│   │   ├── index.html                 # Redireciona para login.html
+│   │   ├── account.html               # Visão de conta e saldo
+│   │   ├── css/style.css              # Estilos globais
+│   │   └── js/                        # Módulos JS (api, auth, login, account...)
+│   │
+│   └── 📂 data-lake/                  # Camada de democratização de dados
+│       ├── glue_job.py                # PySpark: lê SOR via JDBC → Parquet
+│       ├── query_daily.py             # CLI: consulta Parquet por conta/data
+│       ├── run_job.sh                 # Runner do job com check de dependências
+│       ├── requirements.txt           # pyspark, pandas, pyarrow
+│       └── output/                    # Parquet gerado (gitignored)
+│           └── daily_statement/
+│               └── account_id=<uuid>/
+│                   └── date=<yyyy-mm-dd>/
 │
 └── 📂 specs/                          # Especificações SDD
     ├── 001-mvp-banco-digital-pf/      # ✅ MVP backend (22 tarefas)
     ├── 002-frontend-v1/               # ✅ Frontend web (18 tarefas)
-    └── 003-docs-e-scripts/            # ✅ Documentação e scripts (4 tarefas)
+    ├── 003-docs-e-scripts/            # ✅ Documentação e scripts (4 tarefas)
+    └── 004-democratizacao-extrato/    # ✅ Data lake + Parquet diário (13 tarefas)
 ```
 
 ---

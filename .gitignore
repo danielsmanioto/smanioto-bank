@@ -21,3 +21,6 @@ Thumbs.db
 
 # Gerado pelo seed.sh — muda a cada execução
 docs/seed-users.md
+
+# Parquet gerado pelo data-lake job (artefato local, não versionado)
+services/data-lake/output/
