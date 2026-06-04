@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Extrato — smanioto-bank</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <h1>Extrato</h1>
+      <button id="btnLogout" class="btn btn-danger">Sair</button>
+    </div>
+
+    <a id="backLink" href="#" class="back-link">← Voltar para Conta</a>
+
+    <div class="card">
+      <div id="emptyMsg" class="empty-msg" style="display:none">
+        Nenhuma movimentação registrada ainda.
+      </div>
+      <table id="statementTable" style="display:none">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Descrição</th>
+            <th style="text-align:right">Valor (R$)</th>
+          </tr>
+        </thead>
+        <tbody id="statementBody"></tbody>
+      </table>
+      <div id="errorMsg" class="msg msg-error"></div>
+    </div>
+  </div>
+  <script type="module" src="js/statement.js"></script>
+</body>
+</html>

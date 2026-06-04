@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login — smanioto-bank</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <div class="brand">
+        <h1>smanioto-bank</h1>
+        <p>Banco Digital PF</p>
+      </div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Usuário</label>
+          <input type="text" id="username" placeholder="seu usuário" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+        <div class="form-group">
+          <label for="accountId">ID da Conta</label>
+          <input type="text" id="accountId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Entrar</button>
+        <div id="errorMsg" class="msg msg-error"></div>
+      </form>
+    </div>
+  </div>
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

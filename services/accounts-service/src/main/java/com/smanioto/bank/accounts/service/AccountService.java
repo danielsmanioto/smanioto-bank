@@ -53,6 +53,11 @@ public class AccountService {
         }
     }
 
+    public Account getAccount(UUID accountId) {
+        return accountRepository.findById(accountId)
+            .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
+    }
+
     public List<Movement> getStatement(UUID accountId) {
         if (!accountRepository.existsById(accountId)) {
             throw new IllegalArgumentException("Conta não encontrada");

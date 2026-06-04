@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transferência — smanioto-bank</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <h1>Transferência</h1>
+      <button id="btnLogout" class="btn btn-danger">Sair</button>
+    </div>
+
+    <a id="backLink" href="#" class="back-link">← Voltar para Conta</a>
+
+    <div class="card">
+      <form id="transferForm">
+        <div class="form-group">
+          <label for="toAccountId">ID da Conta Destino</label>
+          <input type="text" id="toAccountId"
+                 placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
+        </div>
+        <div class="form-group">
+          <label for="amount">Valor (R$)</label>
+          <input type="number" id="amount"
+                 placeholder="0.00" min="0.01" step="0.01" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Transferir</button>
+        <div id="errorMsg"   class="msg msg-error"></div>
+        <div id="successMsg" class="msg msg-success"></div>
+      </form>
+    </div>
+  </div>
+  <script type="module" src="js/transfer.js"></script>
+</body>
+</html>
