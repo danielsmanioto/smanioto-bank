@@ -15,3 +15,6 @@ Thumbs.db
 # Scripts de execução local
 .logs/
 .pids
+
+# Gerado pelo seed.sh — muda a cada execução
+docs/seed-users.md

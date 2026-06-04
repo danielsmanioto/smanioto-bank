@@ -30,6 +30,7 @@ Laboratório de aprendizado em **Spec-Driven Development (SDD)** com arquitetura
 - [Fluxo Completo de Uso](#-fluxo-completo-de-uso)
 - [Estrutura do Projeto](#-estrutura-do-projeto)
 - [Fluxo de Desenvolvimento (SDD)](#-fluxo-de-desenvolvimento-sdd)
+- [📖 Manual do Usuário](docs/manual-usuario.md)
 
 ---
 
@@ -137,11 +138,29 @@ O script executa automaticamente:
 http://localhost:3000
 ```
 
+> **Primeira vez?** Veja o [📖 Manual do Usuário](docs/manual-usuario.md) — ele explica passo a passo como criar sua conta, fazer login e realizar transferências.
+
 ### 4. Pare tudo quando terminar
 
 ```bash
 ./stop.sh
 ```
+
+---
+
+## 📖 Manual do Usuário
+
+O frontend exige que a conta seja criada via API antes do primeiro acesso. O [Manual do Usuário](docs/manual-usuario.md) guia você pelos 7 passos:
+
+1. Registrar credenciais (API)
+2. Cadastrar perfil de cliente PF (API)
+3. Abrir conta bancária (API) — **guarde o ID da conta**
+4. Fazer login no frontend com usuário + senha + ID da conta
+5. Ver saldo e dados da conta
+6. Consultar extrato de movimentações
+7. Realizar transferências entre contas
+
+> **Atalho:** rode `./seed.sh` após o `./start.sh` para criar 10 usuários prontos (incluindo `admin/admin`) com saldo e extrato populados.
 
 ---
 
@@ -204,19 +223,21 @@ curl http://localhost:8080/auth/validate \
 curl -X POST http://localhost:8081/people \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "João da Silva",
-    "cpf": "123.456.789-09",
-    "birthDate": "1990-05-15"
+    "fullName": "João da Silva",
+    "cpf": "12345678909",
+    "email": "joao@email.com"
   }'
 ```
+
+> **CPF:** somente 11 dígitos numéricos, sem pontos ou traço. Deve ser válido pelo algoritmo brasileiro.
 
 **Resposta:** `201 Created`
 ```json
 {
   "id": "a1b2c3d4-...",
-  "name": "João da Silva",
-  "cpf": "123.456.789-09",
-  "birthDate": "1990-05-15"
+  "fullName": "João da Silva",
+  "cpf": "12345678909",
+  "email": "joao@email.com"
 }
 ```
 
