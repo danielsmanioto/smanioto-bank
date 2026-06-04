@@ -67,32 +67,32 @@ O **smanioto-bank** simula as operações essenciais de um banco digital para Pe
 
 ```mermaid
 graph TD
-    Browser["🌐 Browser<br/>localhost:3000"]
+    Browser["Browser\nlocalhost:3000"]
 
-    Browser -->|"POST /auth/login"| Auth
-    Browser -->|"GET /accounts/{id}"| Accounts
-    Browser -->|"GET /accounts/{id}/statement"| Accounts
-    Browser -->|"POST /accounts/transfer"| Accounts
+    Browser -->|POST /auth/login| Auth
+    Browser -->|GET /accounts/id| Accounts
+    Browser -->|GET /accounts/id/statement| Accounts
+    Browser -->|POST /accounts/transfer| Accounts
 
-    subgraph Microserviços Java
-        Auth["🔐 auth-service<br/>:8080"]
-        People["👤 people-service<br/>:8081"]
-        Accounts["💰 accounts-service<br/>:8082"]
+    subgraph java[Microservicos Java]
+        Auth["auth-service\n:8080"]
+        People["people-service\n:8081"]
+        Accounts["accounts-service\n:8082"]
     end
 
-    Auth --> AuthDB[(H2<br/>authdb)]
-    People --> PeopleDB[(H2<br/>peopledb)]
-    Accounts --> AccountsDB[(H2 TCP<br/>accountsdb<br/>:9092)]
+    Auth --> AuthDB[(H2 authdb)]
+    People --> PeopleDB[(H2 peopledb)]
+    Accounts --> AccountsDB[(H2 TCP accountsdb\n:9092)]
 
-    subgraph Data Lake — Democratização
-        GlueJob["⚙️ glue_job.py<br/>(PySpark local<br/>simula AWS Glue)"]
-        Parquet[("📦 Parquet<br/>daily_statement/<br/>account_id / date")]
-        QueryCLI["🔍 query_daily.py<br/>(consulta ad-hoc)"]
+    subgraph datalake[Data Lake - Democratizacao]
+        GlueJob["glue_job.py\nPySpark local"]
+        Parquet[("Parquet\ndaily_statement\naccount_id / date")]
+        QueryCLI["query_daily.py\nconsulta ad-hoc"]
     end
 
-    AccountsDB -->|"JDBC :9092"| GlueJob
-    GlueJob -->|"overwrite"| Parquet
-    Parquet -->|"pyarrow read"| QueryCLI
+    AccountsDB -->|JDBC :9092| GlueJob
+    GlueJob -->|overwrite| Parquet
+    Parquet -->|pyarrow read| QueryCLI
 ```
 
 ### Serviços
