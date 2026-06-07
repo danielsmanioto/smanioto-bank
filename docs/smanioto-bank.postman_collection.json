@@ -1,0 +1,194 @@
+{
+  "info": {
+    "name": "smanioto-bank",
+    "description": "Coleção completa de endpoints do smanioto-bank.\n\nFluxo recomendado:\n1. Auth > Register\n2. Auth > Login  →  copia o token para a variável {{token}}\n3. People > Criar Cliente  →  copia o id para {{customerId}}\n4. Accounts > Abrir Conta  →  copia o id para {{accountId}}\n5. Accounts > Consultar Conta\n6. Accounts > Extrato\n7. Accounts > Transferência\n\nVariáveis de ambiente necessárias:\n- baseUrlAuth     → http://localhost:8080\n- baseUrlPeople   → http://localhost:8081\n- baseUrlAccounts → http://localhost:8082\n- token           → preenchido após o Login\n- customerId      → preenchido após Criar Cliente\n- accountId       → preenchido após Abrir Conta\n- toAccountId     → id da conta destino para transferência",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrlAuth",     "value": "http://localhost:8080" },
+    { "key": "baseUrlPeople",   "value": "http://localhost:8081" },
+    { "key": "baseUrlAccounts", "value": "http://localhost:8082" },
+    { "key": "token",           "value": "" },
+    { "key": "customerId",      "value": "" },
+    { "key": "accountId",       "value": "" },
+    { "key": "toAccountId",     "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth Service",
+      "description": "Autenticação e autorização — porta 8080",
+      "item": [
+        {
+          "name": "Register — Registrar credenciais",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrlAuth}}/auth/register", "host": ["{{baseUrlAuth}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"joao\",\n  \"password\": \"senha123\"\n}"
+            },
+            "description": "Cria credenciais de acesso (username + password).\nResposta: 201 Created (sem corpo).\nSe o usuário já existir: 409 Conflict."
+          }
+        },
+        {
+          "name": "Login — Obter token JWT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "    console.log('Token salvo na variável {{token}}');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrlAuth}}/auth/login", "host": ["{{baseUrlAuth}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"joao\",\n  \"password\": \"senha123\"\n}"
+            },
+            "description": "Autentica e retorna um token JWT Bearer.\nO script de teste salva o token automaticamente na variável {{token}}.\n\nResposta 200:\n{\n  \"token\": \"eyJ...\",\n  \"type\": \"Bearer\"\n}"
+          }
+        },
+        {
+          "name": "Validate — Validar token JWT",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrlAuth}}/auth/validate", "host": ["{{baseUrlAuth}}"], "path": ["auth", "validate"] },
+            "description": "Valida o token JWT e retorna o username.\nRequer header Authorization: Bearer {{token}}.\n\nResposta 200:\n{\n  \"valid\": true,\n  \"username\": \"joao\"\n}\n\nResposta 401: token inválido ou expirado."
+          }
+        }
+      ]
+    },
+    {
+      "name": "People Service",
+      "description": "Cadastro e consulta de clientes PF — porta 8081",
+      "item": [
+        {
+          "name": "Criar Cliente PF",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) {",
+                  "    pm.collectionVariables.set('customerId', json.id);",
+                  "    console.log('customerId salvo: ' + json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrlPeople}}/people", "host": ["{{baseUrlPeople}}"], "path": ["people"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"João da Silva\",\n  \"cpf\": \"11144477735\",\n  \"email\": \"joao@email.com\"\n}"
+            },
+            "description": "Cadastra um cliente Pessoa Física.\nO CPF deve ser válido pelo algoritmo brasileiro (11 dígitos sem pontos/traço).\nO script de teste salva o id automaticamente na variável {{customerId}}.\n\nResposta 201:\n{\n  \"id\": \"uuid\",\n  \"fullName\": \"João da Silva\",\n  \"cpf\": \"11144477735\",\n  \"email\": \"joao@email.com\"\n}"
+          }
+        },
+        {
+          "name": "Verificar Existência de Cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPeople}}/people/{{customerId}}/exists",
+              "host": ["{{baseUrlPeople}}"],
+              "path": ["people", "{{customerId}}", "exists"]
+            },
+            "description": "Verifica se um cliente existe pelo UUID.\nUsado internamente pelo accounts-service antes de abrir uma conta.\n\nResposta 200:\n{\n  \"exists\": true\n}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accounts Service",
+      "description": "Contas bancárias, saldo, extrato e transferências — porta 8082",
+      "item": [
+        {
+          "name": "Abrir Conta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) {",
+                  "    pm.collectionVariables.set('accountId', json.id);",
+                  "    console.log('accountId salvo: ' + json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrlAccounts}}/accounts", "host": ["{{baseUrlAccounts}}"], "path": ["accounts"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"bank\": \"341\",\n  \"branch\": \"0001\",\n  \"number\": \"00099999-9\",\n  \"initialBalance\": 1000.00\n}"
+            },
+            "description": "Abre uma conta bancária vinculada a um cliente PF existente.\nO customerId deve existir no people-service.\nO script de teste salva o id automaticamente na variável {{accountId}}.\n\nResposta 201:\n{\n  \"id\": \"uuid\",\n  \"bank\": \"341\",\n  \"branch\": \"0001\",\n  \"number\": \"00099999-9\",\n  \"balance\": 1000.00,\n  \"customerId\": \"uuid\"\n}"
+          }
+        },
+        {
+          "name": "Consultar Conta e Saldo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlAccounts}}/accounts/{{accountId}}",
+              "host": ["{{baseUrlAccounts}}"],
+              "path": ["accounts", "{{accountId}}"]
+            },
+            "description": "Retorna os dados da conta e o saldo atual.\n\nResposta 200:\n{\n  \"id\": \"uuid\",\n  \"bank\": \"341\",\n  \"branch\": \"0001\",\n  \"number\": \"00099999-9\",\n  \"balance\": 850.00,\n  \"customerId\": \"uuid\"\n}"
+          }
+        },
+        {
+          "name": "Consultar Extrato",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlAccounts}}/accounts/{{accountId}}/statement",
+              "host": ["{{baseUrlAccounts}}"],
+              "path": ["accounts", "{{accountId}}", "statement"]
+            },
+            "description": "Retorna todas as movimentações da conta em ordem cronológica.\n\nResposta 200 (array):\n[\n  {\n    \"id\": \"uuid\",\n    \"transferId\": \"uuid\",\n    \"type\": \"CREDIT\",\n    \"amount\": 500.00,\n    \"description\": \"Transferência recebida da conta 00000001-0\",\n    \"createdAt\": \"2026-06-06T23:38:00Z\"\n  }\n]"
+          }
+        },
+        {
+          "name": "Realizar Transferência",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrlAccounts}}/accounts/transfer", "host": ["{{baseUrlAccounts}}"], "path": ["accounts", "transfer"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromAccountId\": \"{{accountId}}\",\n  \"toAccountId\": \"{{toAccountId}}\",\n  \"amount\": 100.00\n}"
+            },
+            "description": "Realiza uma transferência interna entre contas do mesmo banco.\nA operação é atômica (débito + crédito simultâneos com lock pessimista).\n\nRegras:\n- Saldo insuficiente → 400 Bad Request\n- Conta origem = conta destino → 400 Bad Request\n- Contas de bancos diferentes → 400 Bad Request\n\nResposta 200:\n{\n  \"transferId\": \"uuid\",\n  \"fromAccountId\": \"uuid\",\n  \"toAccountId\": \"uuid\",\n  \"amount\": 100.00\n}"
+          }
+        }
+      ]
+    }
+  ]
+}
