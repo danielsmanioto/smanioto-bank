@@ -19,50 +19,61 @@ Fluxo principal que você vai usar no dia a dia:
 
 ## 2) Visão do produto (seu banco digital)
 
-Escopo inicial:
+Escopo implementado:
 
 - Conta bancária para **PF**.
-- Cada conta com:
-  - banco
-  - agência
-  - número da conta
-  - saldo
-- Login com usuário/senha e autenticação com **JWT**.
-- Extrato (histórico de lançamentos).
-- Transferência entre usuários do próprio banco (movimentando saldo real entre contas internas).
+- Cada conta com banco, agência, número e saldo.
+- Login com usuário/senha e autenticação via **JWT**.
+- Extrato (histórico de lançamentos por conta).
+- Transferência interna atômica entre contas do mesmo banco.
+- **Camada de dados**: pipeline PySpark que lê o banco operacional e gera Parquet diário particionado por conta/data, permitindo análises históricas sem impactar o serviço transacional.
 
 Escopo futuro:
 
 - Serviço para saída de dinheiro para outros bancos (base para **PIX** futuro).
+- Migração do banco operacional de H2 para PostgreSQL.
+- Controle incremental no job de dados (watermark por data de criação).
 
-## 3) Arquitetura alvo (microserviços)
+## 3) Arquitetura implementada
 
-Sugestão de serviços Java:
+### Microsserviços Java
 
-1. **auth-service**
-   - cadastro de credenciais
-   - login
-   - emissão/validação de JWT
+| Serviço | Porta | Responsabilidade |
+|---|---|---|
+| **auth-service** | 8080 | Cadastro de credenciais, login, emissão e validação de JWT |
+| **people-service** | 8081 | Cadastro e consulta de clientes PF (CPF, nome, e-mail) |
+| **accounts-service** | 8082 | Abertura de conta, saldo, transferências internas, extrato |
 
-2. **people-service**
-   - cadastro de clientes PF
-   - dados pessoais
+Cada serviço tem banco H2 in-memory próprio e independente. O `accounts-service` chama o `people-service` via HTTP para validar o cliente antes de abrir uma conta.
 
-3. **accounts-service**
-   - abertura e gestão de contas
-   - saldo
-   - transferências internas
-   - extrato
+### Frontend
 
-Front-end v1 (simples):
+- HTML + CSS + JavaScript sem framework
+- Servidor Node.js simples na porta 3000
+- Telas: login, visão de conta, extrato, transferência
 
-- HTML + CSS + JavaScript
-- Servidor web básico
-- Telas:
-  - login
-  - visão de conta
-  - extrato
-  - transferência
+### Camada de dados (Data Lake)
+
+```
+accounts-service (H2 TCP :9092)
+        │
+        │ JDBC — leitura assíncrona
+        ▼
+  glue_job.py (PySpark local — simula AWS Glue)
+        │
+        │ overwrite
+        ▼
+  Parquet particionado por account_id / date
+        │
+        │ pyarrow read
+        ▼
+  query_daily.py (CLI para análise ad-hoc)
+```
+
+- Lê tabelas `ACCOUNTS` e `MOVEMENTS` via JDBC sem alterar a API do serviço
+- Calcula posição diária (saldo inicial, créditos, débitos, saldo final) com janela regressiva
+- Salva em `services/data-lake/output/daily_statement/`
+- Stack: Python 3, PySpark 3.5+, pandas, pyarrow
 
 ## 4) Ordem recomendada para aprender e construir
 
@@ -84,19 +95,36 @@ Front-end v1 (simples):
 3. Depois **accounts-service** (saldo, extrato, transferência interna).
 4. Criar front-end v1 para consumir as APIs.
 
-### Fase 4 — Evolução
+### Fase 4 — Camada de dados
+
+1. Habilitar H2 TCP server no `accounts-service` (porta 9092).
+2. Implementar `glue_job.py` com PySpark para leitura via JDBC e geração de Parquet.
+3. Implementar `query_daily.py` com pyarrow para consultas ad-hoc.
+4. Documentar decisão em ADR (ver ADR-004).
+
+### Fase 5 — Evolução
 
 1. Hardening de segurança.
 2. Testes integrados entre serviços.
-3. Preparar contrato para saída externa (futuro PIX).
+3. Migração para PostgreSQL (substituir H2 in-memory).
+4. Controle incremental no job de dados (watermark).
+5. Preparar contrato para saída externa (futuro PIX).
 
-## 5) Regras de domínio mínimas (MVP)
+## 5) Regras de domínio
+
+### Transacional (serviços Java)
 
 - Não permitir transferência com saldo insuficiente.
 - Registrar toda movimentação no extrato.
-- Transferência interna deve ser atômica (débito/crédito).
+- Transferência interna deve ser atômica (débito e crédito ocorrem juntos ou nenhum ocorre).
 - JWT obrigatório nas rotas protegidas.
-- Cliente PF deve existir antes de abrir conta.
+- Cliente PF deve existir no `people-service` antes de abrir conta no `accounts-service`.
+
+### Dados (data-lake)
+
+- O job lê o banco operacional sem impactar a API do serviço (conexão JDBC direta ao H2 TCP).
+- O Parquet é sempre sobrescrito — não há estado incremental no MVP.
+- O saldo diário é reconstruído de forma regressiva a partir do saldo atual; nunca é lido diretamente do extrato cumulativo.
 
 ## 6) Como usar SDD neste repo (prática)
 

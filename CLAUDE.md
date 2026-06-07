@@ -75,6 +75,55 @@ services/<nome>-service/
 
 O `accounts-service` chama o `people-service` via HTTP usando `HttpPeopleClient` (implementação de `PeopleClient`). Não há service discovery — URLs hardcoded nas `application.properties`.
 
+## Data-lake (`services/data-lake/`)
+
+Camada de democratização de dados que simula um pipeline AWS Glue → S3 → Parquet (ver ADR-004).
+
+### Stack de dados
+
+- **Python 3**, **PySpark 3.5+**, **pandas 2.0+**, **pyarrow 14+**
+- Lê do `accounts-service` via **JDBC H2 TCP** (porta 9092) — sem alterar a API do serviço
+- Escreve **Parquet** particionado por `account_id/date` em `output/daily_statement/`
+
+### Arquivos
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `glue_job.py` | Lê `ACCOUNTS` e `MOVEMENTS` via JDBC, calcula visão diária, salva Parquet |
+| `query_daily.py` | CLI para consultar os Parquets (usa pyarrow — não precisa de Spark para leitura) |
+| `run_job.sh` | Executa o job com verificação de dependências Python |
+| `requirements.txt` | `pyspark`, `pandas`, `pyarrow` |
+
+### Como executar
+
+```bash
+# O accounts-service precisa estar rodando (./start.sh na raiz)
+cd services/data-lake
+./run_job.sh                                        # gera os Parquets
+
+python3 query_daily.py --list-accounts              # lista contas no data lake
+python3 query_daily.py --account <uuid>             # extrato diário completo
+python3 query_daily.py --account <uuid> --date 2026-06-04
+python3 query_daily.py --account <uuid> --from 2026-06-01 --to 2026-06-04
+```
+
+### Estrutura de saída
+
+```
+output/daily_statement/
+  account_id=<uuid>/
+    date=<yyyy-mm-dd>/
+      part-00000-....parquet   ← opening_balance, closing_balance, total_credits, total_debits, transactions[]
+```
+
+### Convenções do data-lake
+
+- **Sem API nova no accounts-service** — o job conecta direto ao H2 TCP, nunca via REST
+- **Job sempre reprocessa tudo** (`mode("overwrite")`) — sem controle incremental no MVP
+- **Cálculo de saldo por janela regressiva** — `Window.partitionBy("account_id").orderBy("date".desc())` com soma acumulada; detalhes matemáticos no ADR-004
+- **Consulta usa pyarrow**, não PySpark — mais leve, não sobe cluster Spark para leitura
+- Ao migrar para PostgreSQL, só a `JDBC_URL` em `glue_job.py` precisa mudar
+
 ## ADRs
 
 Decisões arquiteturais estão documentadas em `docs/adr/`:
@@ -108,3 +157,4 @@ Tarefas que envolvem múltiplos arquivos, decisões arquiteturais ou contexto ac
 - Geração de CPFs ou dados pessoais reais em seeds ou testes
 - Alteração nas regras de lock pessimista em `AccountService.transfer()` — qualquer mudança ali deve passar por revisão manual e ter um ADR
 - Mudança no algoritmo de `scale` e `RoundingMode` dos valores monetários
+- Lógica de cálculo de `opening_balance`/`closing_balance` em `glue_job.py` — a janela regressiva com `cum_net_desc` é sutil; qualquer alteração precisa de validação numérica manual

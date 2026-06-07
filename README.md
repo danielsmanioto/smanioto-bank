@@ -68,32 +68,45 @@ O **smanioto-bank** simula as operações essenciais de um banco digital para Pe
 
 ```mermaid
 graph TD
-    Browser["Browser\nlocalhost:3000"]
+    Browser["🌐 Browser\nlocalhost:3000"]
+    Analyst["👤 Analista\n(linha de comando)"]
 
-    Browser -->|POST /auth/login| Auth
-    Browser -->|GET /accounts/id| Accounts
-    Browser -->|GET /accounts/id/statement| Accounts
-    Browser -->|POST /accounts/transfer| Accounts
+    subgraph frontend[Frontend]
+        FE["server.js\nNode.js :3000"]
+    end
 
-    subgraph java[Microservicos Java]
+    subgraph java[Microsserviços Java]
         Auth["auth-service\n:8080"]
         People["people-service\n:8081"]
         Accounts["accounts-service\n:8082"]
     end
 
-    Auth --> AuthDB[(H2 authdb)]
-    People --> PeopleDB[(H2 peopledb)]
-    Accounts --> AccountsDB[(H2 TCP accountsdb\n:9092)]
+    subgraph databases[Bancos H2 in-memory]
+        AuthDB[(H2\nauthdb)]
+        PeopleDB[(H2\npeopledb)]
+        AccountsDB[(H2 TCP\naccountsdb :9092)]
+    end
 
-    subgraph datalake[Data Lake - Democratizacao]
+    subgraph datalake[Data Lake — Democratização]
         GlueJob["glue_job.py\nPySpark local"]
         Parquet[("Parquet\ndaily_statement\naccount_id / date")]
         QueryCLI["query_daily.py\nconsulta ad-hoc"]
     end
 
-    AccountsDB -->|JDBC :9092| GlueJob
+    Browser --> FE
+    FE -->|"POST /auth/login\nGET /auth/validate"| Auth
+    FE -->|"GET /accounts/:id\nGET /accounts/:id/statement\nPOST /accounts/transfer"| Accounts
+
+    Auth --> AuthDB
+    People --> PeopleDB
+    Accounts --> AccountsDB
+
+    Accounts -->|"GET /people/:id/exists\n(valida cliente antes de abrir conta)"| People
+
+    AccountsDB -->|"JDBC :9092\n(leitura assíncrona)"| GlueJob
     GlueJob -->|overwrite| Parquet
-    Parquet -->|pyarrow read| QueryCLI
+    Parquet -->|"pyarrow read"| QueryCLI
+    Analyst --> QueryCLI
 ```
 
 ### Serviços
