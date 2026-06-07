@@ -32,6 +32,7 @@ Laboratório de aprendizado em **Spec-Driven Development (SDD)** com arquitetura
 - [Fluxo Completo de Uso](#-fluxo-completo-de-uso)
 - [Estrutura do Projeto](#-estrutura-do-projeto)
 - [Fluxo de Desenvolvimento (SDD)](#-fluxo-de-desenvolvimento-sdd)
+- [IA no Desenvolvimento](#-ia-no-desenvolvimento)
 - [📖 Manual do Usuário](docs/manual-usuario.md)
 
 ---
@@ -538,6 +539,44 @@ smanioto-bank/
     ├── 003-docs-e-scripts/            # ✅ Documentação e scripts (4 tarefas)
     └── 004-democratizacao-extrato/    # ✅ Data lake + Parquet diário (13 tarefas)
 ```
+
+---
+
+## 🤖 IA no Desenvolvimento
+
+Este projeto é desenvolvido com auxílio de duas ferramentas de IA complementares.
+
+### GitHub Copilot
+
+Usado diretamente no editor (VS Code) para:
+
+- **Autocompletar** código Java seguindo os padrões existentes — records de DTO, métodos de serviço, queries JPA
+- **Gerar testes unitários** a partir da assinatura do método que está sendo testado
+- **Sugestões inline** ao escrever novos endpoints ou validações com Bean Validation
+
+> **Dica:** o Copilot aprende com os arquivos abertos. Abrir um serviço existente (ex: `AccountService.java`) antes de criar um novo garante que ele siga as mesmas convenções (injeção via construtor, `BigDecimal`, `UUID`).
+
+### Claude Code
+
+Usado via CLI (`claude`) para tarefas que exigem mais contexto ou envolvem múltiplos arquivos:
+
+- **Criar novos serviços** seguindo o padrão arquitetural do projeto
+- **Refatorar e revisar** código considerando as ADRs e convenções
+- **Escrever ADRs** para novas decisões técnicas
+- **Depurar problemas** analisando logs e código ao mesmo tempo
+
+O projeto tem comandos customizados para o Claude Code em `.claude/commands/`:
+
+| Comando | O que faz |
+|---|---|
+| `/project:start` | Orienta a subir todos os serviços |
+| `/project:test [auth\|people\|accounts\|all]` | Roda `mvn test` no serviço indicado |
+| `/project:logs [serviço]` | Exibe o log do serviço em tempo real |
+| `/project:new-adr [título]` | Cria um novo ADR com o template padrão |
+| `/project:new-service [nome]` | Guia para criar um novo microsserviço |
+| `/project:seed` | Orienta a popular o banco com dados de teste |
+
+O arquivo `CLAUDE.md` na raiz documenta as convenções, estrutura e padrões de código que o Claude Code usa como contexto em cada sessão.
 
 ---
 
