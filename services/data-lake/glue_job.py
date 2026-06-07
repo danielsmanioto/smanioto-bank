@@ -13,6 +13,13 @@ import glob
 import os
 import sys
 
+# Workaround: Java 17+ removeu Subject.getSubject() usado pelo Hadoop/Spark 3.5
+# Ver BACKLOG.md DT-001 para soluções definitivas
+os.environ.setdefault(
+    "JAVA_TOOL_OPTIONS",
+    "--add-opens java.base/javax.security.auth=ALL-UNNAMED"
+)
+
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
