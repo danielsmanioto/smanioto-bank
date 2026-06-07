@@ -209,6 +209,25 @@ http://localhost:3000
 ./stop.sh
 ```
 
+### 5. (Opcional) Rodar o pipeline de dados
+
+Com os serviços no ar e dados populados, você pode gerar o extrato diário em Parquet:
+
+```bash
+cd services/data-lake
+./run_job.sh
+```
+
+O script verifica se o `accounts-service` está acessível, instala as dependências Python se necessário e executa o job PySpark. Ao final, exibe os comandos para consultar os dados gerados.
+
+```bash
+# Consultar após o job terminar
+python3 query_daily.py --list-accounts
+python3 query_daily.py --account <uuid>
+```
+
+> **Pré-requisitos extras:** Python 3 com `pip3` disponível. As dependências (`pyspark`, `pandas`, `pyarrow`) são instaladas automaticamente pelo script.
+
 ---
 
 ## 📖 Manual do Usuário
