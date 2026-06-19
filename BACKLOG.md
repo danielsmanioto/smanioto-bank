@@ -7,22 +7,21 @@ Issues detalhados: github.com/danielsmanioto/smanioto-bank/issues
 
 ## 🔴 Dívida Técnica
 
-### DT-001 — PySpark incompatível com Java 25
+### ~~DT-001 — PySpark incompatível com Java 25~~ ✅ RESOLVIDO
 **Origem:** erro ao rodar `./datalake.sh`  
 **Erro:** `java.lang.UnsupportedOperationException: getSubject is not supported`
 
-O Hadoop/Spark usa `javax.security.auth.Subject.getSubject()` que foi removido no Java 17+ (JEP 411). O PySpark 3.5.x depende de uma versão do Hadoop que ainda usa essa API.
+**Diagnóstico real (resolvido em 2026-06-19):**
+- `JAVA_TOOL_OPTIONS` e `_JAVA_OPTIONS` **não aceitam** `--add-opens` no Java 25 (saem com "Unrecognized option")
+- `JDK_JAVA_OPTIONS` aceita a flag, mas não resolve: o problema não é acesso modular — `Subject.getSubject(AccessControlContext)` foi removido e lança `UnsupportedOperationException` no Java 21+, independente de `--add-opens`
+- Hadoop 3.4.2 (bundled no PySpark 4.1.2) ainda usa `Subject.getSubject()` em várias classes internas (`UserGroupInformation`, `ViewFileSystem`, etc.)
+- **Dois bugs adicionais descobertos no processo:**
+  - `JAVA_HOME` apontava para caminho inexistente, corrompendo silenciosamente o `spark-class`
+  - H2 2.x persiste `@Enumerated(EnumType.STRING)` como `ENUM('CREDIT','DEBIT')` (tipo `OTHER`), que o Spark JDBC não mapeia
 
-**Soluções possíveis:**
-- Adicionar flag JVM `--add-opens java.base/javax.security.auth=ALL-UNNAMED` ao iniciar o Spark
-- Fazer downgrade para Java 17 LTS (compatível com PySpark 3.5)
-- Aguardar PySpark 4.x que suporta Java 21+
-
-**Workaround temporário:** adicionar ao `glue_job.py` antes de criar a SparkSession:
-```python
-import os
-os.environ["JAVA_TOOL_OPTIONS"] = "--add-opens java.base/javax.security.auth=ALL-UNNAMED"
-```
+**Solução aplicada em `glue_job.py`:**
+1. `_fix_java_home()` — detecta Java 21+ e usa `java_home -v 17` (Corretto 17, instalado) automaticamente
+2. `read_accounts()` e `read_movements()` — leem via query SQL com `CAST(UUID AS VARCHAR)` e `CAST(ENUM AS VARCHAR)` 
 
 **Referência:** ADR-004
 

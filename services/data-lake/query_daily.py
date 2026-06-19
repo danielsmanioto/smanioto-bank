@@ -104,7 +104,7 @@ def print_daily(df: pd.DataFrame) -> None:
             print(f"\n  {'Lançamentos detalhados':}")
             print(f"  {'-' * 66}")
             for _, row in group.iterrows():
-                if row["transactions"]:
+                if row["transactions"] is not None and len(row["transactions"]) > 0:
                     date_str = str(row["date"])[:10]
                     print(f"  [{date_str}]")
                     for t in row["transactions"]:

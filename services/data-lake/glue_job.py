@@ -15,22 +15,69 @@ import subprocess
 import sys
 
 
-def _fix_java_home():
-    java_home = os.environ.get("JAVA_HOME", "")
-    if java_home and os.path.isfile(os.path.join(java_home, "bin", "java")):
-        return
+def _java_major_version(java_bin: str) -> int:
     try:
-        result = subprocess.run(
-            ["java", "-XshowSettings:properties", "-version"],
-            capture_output=True, text=True,
-        )
-        for line in result.stderr.splitlines():
-            if "java.home" in line:
-                os.environ["JAVA_HOME"] = line.split("=", 1)[1].strip()
-                return
+        r = subprocess.run([java_bin, "-version"], capture_output=True, text=True)
+        for line in r.stderr.splitlines():
+            if "version" in line:
+                # "openjdk version \"17.0.3\"" or "openjdk version \"25.0.1\""
+                import re
+                m = re.search(r'"(\d+)', line)
+                if m:
+                    return int(m.group(1))
+    except Exception:
+        pass
+    return 0
+
+
+def _fix_java_home():
+    """Garante que JAVA_HOME aponta para Java 17 ou 20.
+    Hadoop 3.4.x usa Subject.getSubject() que lança UnsupportedOperationException no Java 21+.
+    """
+    # Verifica o Java atual
+    java_home = os.environ.get("JAVA_HOME", "")
+    current_java = os.path.join(java_home, "bin", "java") if java_home else "java"
+    if not os.path.isfile(current_java):
+        current_java = "java"
+
+    version = _java_major_version(current_java)
+    if 17 <= version <= 20:
+        # Java compatível — apenas garante que JAVA_HOME está correto
+        if not java_home or not os.path.isfile(os.path.join(java_home, "bin", "java")):
+            r = subprocess.run([current_java, "-XshowSettings:properties", "-version"],
+                               capture_output=True, text=True)
+            for line in r.stderr.splitlines():
+                if "java.home" in line:
+                    os.environ["JAVA_HOME"] = line.split("=", 1)[1].strip()
+        return
+
+    # Java 21+ (ou não detectado): busca Java 17 via java_home (macOS) ou candidatos conhecidos
+    print(f"[WARN] Java {version} detectado. Hadoop 3.4.x requer Java 17-20. Buscando Java 17...")
+    candidates = []
+    try:
+        r = subprocess.run(["/usr/libexec/java_home", "-v", "17"],
+                           capture_output=True, text=True)
+        if r.returncode == 0 and r.stdout.strip():
+            candidates.append(r.stdout.strip())
     except FileNotFoundError:
-        print("[ERROR] 'java' não encontrado no PATH.")
-        sys.exit(1)
+        pass
+    try:
+        r = subprocess.run(["/usr/libexec/java_home", "-v", "20"],
+                           capture_output=True, text=True)
+        if r.returncode == 0 and r.stdout.strip():
+            candidates.append(r.stdout.strip())
+    except FileNotFoundError:
+        pass
+
+    for home in candidates:
+        java_bin = os.path.join(home, "bin", "java")
+        v = _java_major_version(java_bin)
+        if 17 <= v <= 20:
+            print(f"[INFO] Usando Java {v} em: {home}")
+            os.environ["JAVA_HOME"] = home
+            return
+
+    print(f"[ERROR] Java 17 ou 20 não encontrado. O job pode falhar com Java {version}+.")
 
 
 _fix_java_home()
@@ -56,18 +103,15 @@ def find_h2_jar() -> str:
     return jars[0]
 
 
-_ADD_OPENS = "--add-opens java.base/javax.security.auth=ALL-UNNAMED"
-
-
 def build_spark(h2_jar: str) -> SparkSession:
+    # spark.driver.extraClassPath evita que o Spark passe o JAR pelo Hadoop FileSystem
+    # (que chama Subject.getSubject(), removido no Java 21+)
     return (
         SparkSession.builder
         .appName("smanioto-bank-democratizacao-extrato")
         .master("local[*]")
-        .config("spark.jars", h2_jar)
+        .config("spark.driver.extraClassPath", h2_jar)
         .config("spark.sql.session.timeZone", "America/Sao_Paulo")
-        .config("spark.driver.extraJavaOptions", _ADD_OPENS)
-        .config("spark.executor.extraJavaOptions", _ADD_OPENS)
         .getOrCreate()
     )
 
@@ -84,8 +128,27 @@ JDBC_PROPS = {
 }
 
 
-def read_table(spark: SparkSession, table: str):
-    return spark.read.jdbc(url=JDBC_URL, table=table, properties=JDBC_PROPS)
+def _jdbc(spark: SparkSession, query: str):
+    return spark.read.jdbc(url=JDBC_URL, table=f"({query}) t", properties=JDBC_PROPS)
+
+
+def read_accounts(spark: SparkSession):
+    # H2 retorna UUID como binário via JDBC; CAST para VARCHAR produz o formato legível.
+    return _jdbc(spark, "SELECT CAST(ID AS VARCHAR) AS ID, BALANCE FROM ACCOUNTS")
+
+
+def read_movements(spark: SparkSession):
+    # JPA (SpringPhysicalNamingStrategy) converte camelCase → snake_case.
+    # H2 2.x persiste @Enumerated(EnumType.STRING) como ENUM('CREDIT','DEBIT'),
+    # tipo SQL OTHER que o Spark não mapeia; CAST para VARCHAR resolve.
+    return _jdbc(spark,
+        "SELECT CAST(ID AS VARCHAR) AS ID,"
+        " CAST(ACCOUNT_ID AS VARCHAR) AS ACCOUNT_ID,"
+        " CAST(TRANSFER_ID AS VARCHAR) AS TRANSFER_ID,"
+        " CAST(TYPE AS VARCHAR) AS TYPE,"
+        " AMOUNT, DESCRIPTION, CREATED_AT"
+        " FROM MOVEMENTS"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -111,12 +174,12 @@ def compute_daily_statement(accounts, movements):
     )
 
     mov = movements.select(
-        F.col("ACCOUNTID").alias("account_id"),
+        F.col("ACCOUNT_ID").alias("account_id"),
         F.col("ID").alias("movement_id"),
         F.col("TYPE").alias("type"),
         F.col("AMOUNT").alias("amount"),
         F.col("DESCRIPTION").alias("description"),
-        F.col("CREATEDAT").cast("timestamp").alias("created_at"),
+        F.col("CREATED_AT").cast("timestamp").alias("created_at"),
     ).withColumn("date", F.to_date(F.col("created_at")))
 
     # Agrega por dia
@@ -209,8 +272,8 @@ def main():
     spark.sparkContext.setLogLevel("WARN")
 
     print("[INFO] Lendo tabelas SOR do accounts-service...")
-    accounts = read_table(spark, "ACCOUNTS")
-    movements = read_table(spark, "MOVEMENTS")
+    accounts = read_accounts(spark)
+    movements = read_movements(spark)
 
     print(f"[INFO] Contas: {accounts.count()} | Movimentos: {movements.count()}")
 
