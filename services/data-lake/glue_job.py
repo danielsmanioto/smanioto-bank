@@ -11,14 +11,29 @@ Execute com: python glue_job.py [--output ./output]
 import argparse
 import glob
 import os
+import subprocess
 import sys
 
-# Workaround: Java 17+ removeu Subject.getSubject() usado pelo Hadoop/Spark 3.5
-# Ver BACKLOG.md DT-001 para soluções definitivas
-os.environ.setdefault(
-    "JAVA_TOOL_OPTIONS",
-    "--add-opens java.base/javax.security.auth=ALL-UNNAMED"
-)
+
+def _fix_java_home():
+    java_home = os.environ.get("JAVA_HOME", "")
+    if java_home and os.path.isfile(os.path.join(java_home, "bin", "java")):
+        return
+    try:
+        result = subprocess.run(
+            ["java", "-XshowSettings:properties", "-version"],
+            capture_output=True, text=True,
+        )
+        for line in result.stderr.splitlines():
+            if "java.home" in line:
+                os.environ["JAVA_HOME"] = line.split("=", 1)[1].strip()
+                return
+    except FileNotFoundError:
+        print("[ERROR] 'java' não encontrado no PATH.")
+        sys.exit(1)
+
+
+_fix_java_home()
 
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
@@ -41,6 +56,9 @@ def find_h2_jar() -> str:
     return jars[0]
 
 
+_ADD_OPENS = "--add-opens java.base/javax.security.auth=ALL-UNNAMED"
+
+
 def build_spark(h2_jar: str) -> SparkSession:
     return (
         SparkSession.builder
@@ -48,6 +66,8 @@ def build_spark(h2_jar: str) -> SparkSession:
         .master("local[*]")
         .config("spark.jars", h2_jar)
         .config("spark.sql.session.timeZone", "America/Sao_Paulo")
+        .config("spark.driver.extraJavaOptions", _ADD_OPENS)
+        .config("spark.executor.extraJavaOptions", _ADD_OPENS)
         .getOrCreate()
     )
 
