@@ -64,6 +64,46 @@ services/<nome>-service/
 - **`BigDecimal` para valores monetários** — sempre com `scale=2` e `HALF_EVEN`
 - **`UUID` como identificador** de todas as entidades
 
+## Comandos Maven (por serviço)
+
+Todos os serviços usam **Maven 3.9+** com Java 17. Execute na raiz de cada serviço:
+
+```bash
+cd services/auth-service  # (ou people-service / accounts-service)
+
+# Compilar e pular testes
+mvn clean compile -DskipTests
+
+# Rodar todos os testes
+mvn test
+
+# Rodar uma classe de teste específica
+mvn test -Dtest=AuthControllerTest
+
+# Rodar um método de teste específico
+mvn test -Dtest=AuthControllerTest#deveRegistrarComSucesso
+
+# Gerar JAR (sem executar)
+mvn package -DskipTests
+
+# Ver dependências do projeto
+mvn dependency:tree
+
+# Limpar artefatos gerados (target/)
+mvn clean
+```
+
+### Testes via Claude Code
+
+Use a skill `test` para rodar testes de um serviço:
+
+```bash
+/project:test auth       # testa auth-service
+/project:test all        # testa os 3 serviços
+```
+
+> **Nota:** os testes não incluem `@SpringBootTest` — apenas unitários com `@WebMvcTest` (controller) e `@ExtendWith(MockitoExtension.class)` (service).
+
 ## Convenções de testes
 
 - Testes de serviço: `@ExtendWith(MockitoExtension.class)` com mocks declarados via `@Mock`
@@ -124,6 +164,38 @@ output/daily_statement/
 - **Consulta usa pyarrow**, não PySpark — mais leve, não sobe cluster Spark para leitura
 - Ao migrar para PostgreSQL, só a `JDBC_URL` em `glue_job.py` precisa mudar
 
+## Claude Code Skills
+
+O projeto define skills customizadas (`.claude/commands/`) para tarefas comuns:
+
+| Skill | Uso | Exemplo |
+|---|---|---|
+| `start` | Inicia todos os serviços (equivalente a `./start.sh`) | `/project:start` |
+| `stop` | Para todos os serviços | `/project:stop` |
+| `test` | Roda testes de um serviço | `/project:test auth` ou `/project:test all` |
+| `logs` | Exibe logs de um serviço em tempo real | `/project:logs accounts` |
+| `seed` | Popula banco com 10 usuários de teste | `/project:seed` |
+| `datalake` | Executa o pipeline Glue → Parquet | `/project:datalake` |
+| `new-adr` | Cria um novo ADR | `/project:new-adr "Título da Decisão"` |
+| `new-service` | Guia para criar microsserviço | `/project:new-service <nome>` |
+
+### Exemplos de uso
+
+```bash
+# Rodar testes do people-service e ver os logs
+/project:test people
+/project:logs people
+
+# Criar uma nova decisão técnica
+/project:new-adr "Migrar de H2 para PostgreSQL"
+
+# Popular banco e ver extrato no data-lake
+./start.sh
+./seed.sh
+/project:datalake
+python3 services/data-lake/query_daily.py --list-accounts
+```
+
 ## ADRs
 
 Decisões arquiteturais estão documentadas em `docs/adr/`:
@@ -137,6 +209,148 @@ Decisões arquiteturais estão documentadas em `docs/adr/`:
 | Variável     | Serviço       | Descrição                                 |
 |--------------|---------------|-------------------------------------------|
 | `JWT_SECRET` | auth-service  | Chave para assinar tokens JWT (obrigatória)|
+
+## Troubleshooting
+
+### Portas já em uso
+
+Se ao rodar `./start.sh` você receber erro de porta já em uso (8080, 8081, 8082, 3000):
+
+```bash
+# Listar processos nas portas
+lsof -i :8080
+lsof -i :8081
+lsof -i :8082
+lsof -i :3000
+
+# Matar o processo (trocar PID)
+kill -9 <PID>
+
+# Ou simplesmente parar tudo
+./stop.sh
+```
+
+### JWT_SECRET não definida
+
+Se a autenticação falhar com erro `NullPointerException` em `JwtService`:
+
+```bash
+export JWT_SECRET=meu-secret-local-dev
+./start.sh
+```
+
+Ou no `start.sh`, a variável já tem um valor padrão para dev local.
+
+### H2 não carrega dados do seed
+
+Verificar se o accounts-service expõe a porta TCP 9092 (necessária para data-lake):
+
+```bash
+# Deve estar aberto
+lsof -i :9092
+
+# Se não, verificar o log
+./logs.sh -s accounts | grep -i "h2\|tcp"
+```
+
+### Testes falhando após alteração de entidade
+
+Se um teste falha após mudar modelo JPA, limpar cache Maven:
+
+```bash
+cd services/<nome>-service
+mvn clean test
+```
+
+### Frontend não conecta aos serviços
+
+Verificar se todos os 3 microsserviços estão rodando:
+
+```bash
+./logs.sh -e    # mostra apenas erros
+curl -i http://localhost:8080/auth/validate  # deve retornar 401 (sem token)
+curl -i http://localhost:8082/accounts       # deve retornar erro de formato
+```
+
+### Data-lake: erro ao conectar no H2 TCP
+
+Verificar se o accounts-service está com o servidor H2 TCP ativo:
+
+```bash
+cd services/data-lake
+./run_job.sh
+# Se falhar, aumentar o timeout ou verificar ./logs.sh -s accounts
+```
+
+## Git Workflow
+
+### Convenção de branches
+
+- `main` — sempre pronta para produção, protegida
+- `feature/<nome>` — branches de features (ex: `feature/pix-integration`)
+- `fix/<nome>` — branches de bugfix (ex: `fix/transfer-race-condition`)
+- `docs/<nome>` — branches de documentação (ex: `docs/adr-004`)
+
+### Convenção de commits
+
+```
+<tipo>(<escopo>): <mensagem curta>
+
+<descrição opcional>
+```
+
+**Tipos:** `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
+
+**Escopos:** nome do serviço ou área (`auth`, `people`, `accounts`, `frontend`, `data-lake`)
+
+**Exemplos:**
+```
+feat(accounts): adiciona lock pessimista em transferências
+fix(auth): corrige JWT expirado sendo aceito
+docs(adr): registra decisão sobre H2 in-memory
+```
+
+### Processo de ADR
+
+Toda decisão técnica relevante deve ter um ADR:
+
+```bash
+/project:new-adr "Título da Decisão"
+# Cria docs/adr/ADR-NNN-titulo.md com template
+# Edite o arquivo e commite:
+git add docs/adr/ADR-NNN-titulo.md
+git commit -m "docs(adr): ADR-NNN titulo da decisão"
+```
+
+Referencie o ADR ao implementar (ex: no comentário da classe ou em commits).
+
+## IDE Setup
+
+### VS Code + Spring Boot Extension Pack
+
+Recomendado: instalar [Extension Pack for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack) que inclui:
+- Language Support for Java
+- Debugger for Java
+- Test Runner for Java
+- Visual Studio IntelliCode
+
+### Abrindo o projeto
+
+```bash
+code .
+```
+
+### Debugging de testes
+
+No VS Code, colocando breakpoint em um teste e clicando "Debug" acima do nome do teste, você entra no debugger direto.
+
+### Copilot + Contexto
+
+Para melhor autocompletar do Copilot:
+
+1. Abra um arquivo do serviço que está desenvolvendo (ex: `AccountService.java`)
+2. Abra o DTO ou entidade relacionada (ex: `AccountDTO.java`, `Account.java`)
+3. O Copilot aprenderá os padrões (records, BigDecimal, UUID) e sugerirá autocompletes consistentes
 
 ## Ferramentas de IA usadas no projeto
 
