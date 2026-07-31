@@ -2,6 +2,7 @@ import { getStatement } from './api.js';
 import { requireAuth, getAccountId, logout } from './auth.js';
 
 document.getElementById('btnLogout').addEventListener('click', logout);
+document.getElementById('btnSavePdf').addEventListener('click', () => window.print());
 
 const token = await requireAuth();
 if (!token) throw new Error('not authenticated');

@@ -10,12 +10,15 @@
   <div class="page">
     <div class="page-header">
       <h1>Extrato</h1>
-      <button id="btnLogout" class="btn btn-danger">Sair</button>
+      <button id="btnLogout" class="btn btn-danger no-print">Sair</button>
     </div>
 
-    <a id="backLink" href="#" class="back-link">← Voltar para Conta</a>
+    <a id="backLink" href="#" class="back-link no-print">← Voltar para Conta</a>
 
     <div class="card">
+      <div class="no-print" style="text-align:right; margin-bottom:16px">
+        <button id="btnSavePdf" class="btn btn-secondary">Salvar em PDF</button>
+      </div>
       <div id="emptyMsg" class="empty-msg" style="display:none">
         Nenhuma movimentação registrada ainda.
       </div>

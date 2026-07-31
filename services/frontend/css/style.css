@@ -167,3 +167,11 @@ tbody tr:last-child td { border-bottom: none; }
   font-size: .9rem;
 }
 .back-link:hover { text-decoration: underline; }
+
+/* ── Print (Salvar em PDF) ── */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  .card { box-shadow: none; padding: 0; }
+  .page { margin: 0; max-width: 100%; }
+}
