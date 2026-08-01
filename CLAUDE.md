@@ -164,6 +164,8 @@ output/daily_statement/
 - **Consulta usa pyarrow**, não PySpark — mais leve, não sobe cluster Spark para leitura
 - Ao migrar para PostgreSQL, só a `JDBC_URL` em `glue_job.py` precisa mudar
 
+> **`.claude/agents/`**: os agentes definidos ali (`tech-lead`, `po`, `qa`, `desenvolvedor_backend`, `desenvolvedor_frontend`) descrevem um projeto diferente ("squad-virtual-checkout-supermercado") e não se aplicam ao smanioto-bank — ignore-os ao trabalhar neste repositório.
+
 ## Claude Code Skills
 
 O projeto define skills customizadas (`.claude/commands/`) para tarefas comuns:
@@ -203,6 +205,10 @@ Decisões arquiteturais estão documentadas em `docs/adr/`:
 - **ADR-002** — Lock pessimista em transferências
 - **ADR-003** — Sem framework de mapeamento
 - **ADR-004** — Democratização de extrato via Parquet
+- **ADR-005** (Proposto) — Modelo ledger: saldo calculado a partir dos lançamentos (depende do ADR-006)
+- **ADR-006** (Proposto) — Migração de H2 in-memory para PostgreSQL via Docker
+
+> ADR-005 e ADR-006 ainda não foram implementados — o estado atual do código continua o descrito no ADR-001 (H2) e ADR-002 (saldo como campo em `Account`, não derivado dos lançamentos). Não assuma o modelo ledger ou PostgreSQL ao ler `AccountService`.
 
 ## Variáveis de ambiente
 
