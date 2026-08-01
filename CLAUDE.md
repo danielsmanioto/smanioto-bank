@@ -164,7 +164,7 @@ output/daily_statement/
 - **Consulta usa pyarrow**, não PySpark — mais leve, não sobe cluster Spark para leitura
 - Ao migrar para PostgreSQL, só a `JDBC_URL` em `glue_job.py` precisa mudar
 
-> **`.claude/agents/`**: os agentes definidos ali (`tech-lead`, `po`, `qa`, `desenvolvedor_backend`, `desenvolvedor_frontend`) descrevem um projeto diferente ("squad-virtual-checkout-supermercado") e não se aplicam ao smanioto-bank — ignore-os ao trabalhar neste repositório.
+> **`.claude/agents/`**: define papéis de squad para o smanioto-bank — `tech-lead` (arquitetura/ADRs/guiar o time), `desenvolvedor_backend` (Java + data-lake), `desenvolvedor_frontend` (HTML/CSS/JS), `qa` (testes unitários + automação funcional/e2e) e `po` (escopo, specs, backlog).
 
 ## Claude Code Skills
 
